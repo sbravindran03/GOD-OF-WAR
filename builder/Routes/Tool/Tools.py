@@ -55,6 +55,23 @@ def get_image_url(keyword):
     return list(image_urls)[0]
 
 
+def listof_get_image_url(keyword, len):
+    url = f"https://www.google.com/search?q={keyword}&tbm=isch"
+
+    # Make a GET request to the URL and get the HTML content
+    response = requests.get(url)
+    html_content = response.content
+
+    # Parse the HTML content using BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html.parser')
+    image_urls = set()
+    for img in soup.find_all('img'):
+        img_url = img.get('src')
+        if img_url:
+            image_urls.add(img_url)
+    return list(image_urls)[0:len]
+
+
 def get_answer_from_given_link(question_url):
     code = ''
     response = requests.get(question_url)
