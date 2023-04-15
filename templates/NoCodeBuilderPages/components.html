@@ -1,364 +1,9 @@
-{% extends 'NoCodeBuilderPages/base.html' %} {% block content %}
-<style>
-  .parent_builder {
-    background-color: #444;
-  }
-
-  #blocks {
-    width: 15%;
-  }
-
-  #stylesElements {
-    width: 20%;
-  }
-
-  #gjs {
-    width: 65%;
-  }
-
-  .gjs-pn-panel {
-    position: relative !important;
-  }
-</style>
-<div class="panel__top flex justify-between w-full p-4">
-  <div class="panel__basic-actions"></div>
-  <div class="panel__devices"></div>
-  <div class="panel__switcher flex justify-center">
-    <form onsubmit="saveContent(event)">
-      {% csrf_token %}
-      <input type="text" name="Project_name" id="Project_name">
-      <button class="py-2 px-6 rounded text-white btn bg-blue-500 hover:bg-blue-600 mr-4" type="submit">Save</button>
-    </form>
-  </div>
-</div>
-<div class="parent_builder flex justify-between items-start">
-  <div id="blocks" class="h-full">
-    <div class="layers-container"></div>
-  </div>
-  <div id="gjs" style="height: 500px">
-    {% comment %} {% if page %}
-    {{ page.html|safe }}
-    {% endif %} {% endcomment %}
-  </div>
-  <div class="flex flex-col" id="stylesElements">
-    <div class="traits-container"></div>
-    <div class="styles-container"></div>
-    <div id="stylemanager" class="h-full"></div>
-  </div>
-</div>
-<script defer>
-  const editor = grapesjs.init({
-    // Indicate where to init the editor. You can also pass an HTMLElement
-    container: "#gjs",
-    // Get the content for the canvas directly from the element
-    // As an alternative we could use: `components: '<h1>Hello World Component!</h1>'`,
-    fromElement: true,
-    // Size of the editor
-    // Disable the storage manager for the moment
-    storageManager: false,
-    forceClass: false,
-    layerManager: {
-      appendTo: ".layers-container",
-    },
-    traitManager: {
-      appendTo: ".traits-container",
-    },
-
-    deviceManager: {
-      devices: [
+<script>
+    [
         {
-          name: "Desktop",
-          width: "", // default size
-        },
-        {
-          name: "Mobile",
-          width: "320px", // this value will be used on canvas width
-          widthMedia: "480px", // this value will be used in CSS @media
-        },
-      ],
-    },
-    // Avoid any default panel
-    panels: {
-      defaults: [
-        // ...
-        {
-          id: "panel-switcher",
-          el: ".panel__switcher",
-          buttons: [
-            {
-              id: "show-layers",
-              active: true,
-              label: "Layers",
-              command: "show-layers",
-              // Once activated disable the possibility to turn it off
-              togglable: false,
-            },
-            {
-              id: "show-style",
-              active: true,
-              label: "Styles",
-              command: "show-styles",
-              togglable: false,
-            },
-          ],
-        },
-        {
-          id: "panel-devices",
-          el: ".panel__devices",
-          buttons: [
-            {
-              id: "device-desktop",
-              label: "D",
-              command: "set-device-desktop",
-              active: true,
-              togglable: false,
-            },
-            {
-              id: "device-mobile",
-              label: "M",
-              command: "set-device-mobile",
-              togglable: false,
-            },
-          ],
-        },
-      ],
-    },
-    selectorManager: {
-      appendTo: ".styles-container",
-      componentFirst: true,
-      custom: true,
-    },
-    styleManager: {
-      appendTo: "#stylemanager",
-      sectors: [
-        {
-          name: "Dimension",
-          open: false,
-          // Use built-in properties
-          buildProps: ["width", "min-height", "padding"],
-          // Use `properties` to define/override single property
-          properties: [
-            {
-              // Type of the input,
-              // options: integer | radio | select | color | slider | file | composite | stack
-              type: "integer",
-              name: "The width", // Label for the property
-              property: "width", // CSS property (if buildProps contains it will be extended)
-              units: ["px", "%"], // Units, available only for 'integer' types
-              defaults: "auto", // Default value
-              min: 0, // Min value, available only for 'integer' types
-            },
-          ],
-        },
-        {
-          name: "Extra",
-          open: false,
-          buildProps: ["background-color", "box-shadow", "custom-prop"],
-          properties: [
-            {
-              id: "custom-prop",
-              name: "Custom Label",
-              property: "font-size",
-              type: "select",
-              defaults: "32px",
-              // List of options, available only for 'select' and 'radio'  types
-              options: [
-                { value: "12px", name: "Tiny" },
-                { value: "18px", name: "Medium" },
-                { value: "32px", name: "Big" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    blockManager: {
-      appendTo: "#blocks",
-      blocks: [
-        {
-          id: "section", // id is mandatory
-          label: "<b>Section</b>", // You can use HTML/SVG inside labels
-          attributes: { class: "gjs-block-section" },
-          content: `<section>
-                      <h1>This is a simple title</h1>
-                      <div>This is just a Lorem text: Lorem ipsum dolor sit amet</div>
-                    </section>`
-        }]
-    },
-    blockManager: {
-      appendTo: "#blocks",
-      blocks: [
-        {
-          id: "section", // id is mandatory
-          label: "<b>Section</b><img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFRmWtO1zrO6tt35ewAJOE9NpAb8yiwhbrBWyxjVQCZw&s'>", // You can use HTML/SVG inside labels
-          attributes: { class: "gjs-block-section" },
-          content: `<section>
-                      <h1>This is a simple title</h1>
-                      <div>This is just a Lorem text: Lorem ipsum dolor sit amet</div>
-                    </section>`,
-        },
-        {
-          id: "text",
-          label: "Text",
-          content: '<div data-gjs-type="text">Insert your text here</div>',
-        },
-        {
-          id: "image",
-          label: "Image",
-          // Select the component once it's dropped
-          select: true,
-          // You can pass components as a JSON instead of a simple HTML string,
-          // in this case we also use a defined component type `image`
-          content: { type: "image" },
-          // This triggers `active` event on dropped components and the `image`
-          // reacts by opening the AssetManager
-          activate: true,
-        },
-        {
-          id: 'form-1',
-          label: 'Form 1',
-          attributes: { class: '' },
-          content: `
-          <section class="flex flex-col md:flex-row h-screen items-center">
-          
-            <div class="bg-indigo-600 hidden lg:block w-full md:w-1/2 xl:w-2/3 h-screen">
-              <img src="https://source.unsplash.com/random" alt="" class="w-full h-full object-cover">
-            </div>
-          
-            <div class="bg-white w-full md:max-w-md lg:max-w-full md:mx-auto md:mx-0 md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12
-                  flex items-center justify-center">
-          
-              <div class="w-full h-100">
-          
-          
-                <h1 class="text-xl md:text-2xl font-bold leading-tight mt-12">Log in to your account</h1>
-          
-                <form class="mt-6" action="#" method="POST">
-                  <div>
-                    <label class="block text-gray-700">Email Address</label>
-                    <input type="email" name="" id="" placeholder="Enter Email Address" class="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none" autofocus autocomplete required>
-                  </div>
-          
-                  <div class="mt-4">
-                    <label class="block text-gray-700">Password</label>
-                    <input type="password" name="" id="" placeholder="Enter Password" minlength="6" class="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500
-                          focus:bg-white focus:outline-none" required>
-                  </div>
-          
-                  <div class="text-right mt-2">
-                    <a href="#" class="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700">Forgot Password?</a>
-                  </div>
-          
-                  <button type="submit" class="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg
-                        px-4 py-3 mt-6">Log In</button>
-                </form>
-          
-                <hr class="my-6 border-gray-300 w-full">
-          
-                <button type="button" class="w-full block bg-white hover:bg-gray-100 focus:bg-gray-100 text-gray-900 font-semibold rounded-lg px-4 py-3 border border-gray-300">
-                      <div class="flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="w-6 h-6" viewBox="0 0 48 48"><defs><path id="a" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></defs><clipPath id="b"><use xlink:href="#a" overflow="visible"/></clipPath><path clip-path="url(#b)" fill="#FBBC05" d="M0 37V11l17 13z"/><path clip-path="url(#b)" fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z"/><path clip-path="url(#b)" fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z"/><path clip-path="url(#b)" fill="#4285F4" d="M48 48L17 24l-4-3 35-10z"/></svg>
-                      <span class="ml-4">
-                      Log in
-                      with
-                      Google</span>
-                      </div>
-                    </button>
-          
-                <p class="mt-8">Need an account? <a href="#" class="text-blue-500 hover:text-blue-700 font-semibold">Create an
-                        account</a></p>
-              </div>
-            </div>
-          
-          </section>
-          `
-        },
-        {
-          id: 'form2',
-          label: 'Form-2',
-          attributes: { clas: '' },
-          category: "Basic",
-          content: `
-          
-            <div class="bg-slate-700 w-full py-10 px-10">
-              <div>
-                <div class="sm:flex space-x-7 md:items-start items-center">
-                  <div class="mb-4">
-                    <img class="rounded-md md:w-80" src="https://avatars.githubusercontent.com/u/5550850?v=4" alt="brad" />
-                  </div>
-                  <div>
-                    <h1 class="text-slate-100 text-4xl font-bold my-2">Brad Traversy</h1>
-                    <p class="text-slate-100 text-lg tracking-wide mb-6 md:max-w-lg">Full stack web developer and online instructor, specializiing in mostly JS, but also write Python, PHP and some other stuff.</p>
-                    <button class="border-2 px-6 py-4 rounded-md border-indigo-600 text-slate-100 hover:bg-indigo-600 hover:text-indigo-100 transition duration-75">VISIT GITHUB PROFILE</button>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-8 sm:grid grid-cols-3 sm:space-x-4">
-                <div class="bg-slate-600 p-6 rounded-md mb-4">
-                  <span class="text-slate-400 text-md">Location</span>
-                  <h2 class="text-slate-100 text-2xl font-semibold">Massachusetts</h2>
-                </div>
-                <div class="bg-slate-600 p-6 rounded-md mb-4">
-                  <span class="text-slate-400 text-md">Website</span>
-                  <h2 class="text-slate-100 text-2xl font-semibold">traversymedia</h2>
-                </div>
-                <div class="bg-slate-600 p-6 rounded-md mb-4">
-                  <span class="text-slate-400 text-md">Twitter</span>
-                  <h2 class="text-slate-100 text-2xl font-semibold">traversymedia</h2>
-                </div>
-              </div>
-              <div class="sm:grid lg:grid-cols-4 grid-cols-2 sm:gap-x-4">
-                <div class="flex justify-between items-center bg-slate-600 p-6 rounded-md mb-4">
-                  <div>
-                    <span class="text-md text-slate-400">Followers</span>
-                    <h1 class="text-3xl font-bold text-slate-100">47155</h1>
-                  </div>
-                  <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center bg-slate-600 p-6 rounded-md mb-4">
-                  <div>
-                    <span class="text-md text-slate-400">Following</span>
-                    <h1 class="text-3xl font-bold text-slate-100">9322</h1>
-                  </div>
-                  <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center bg-slate-600 p-6 rounded-md mb-4">
-                  <div>
-                    <span class="text-md text-slate-400">Public Rpos</span>
-                    <h1 class="text-3xl font-bold text-slate-100">236</h1>
-                  </div>
-                  <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center bg-slate-600 p-6 rounded-md mb-4">
-                  <div>
-                    <span class="text-md text-slate-400">Public Gists</span>
-                    <h1 class="text-3xl font-bold text-slate-100">40</h1>
-                  </div>
-                  <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `
-        },        {
             id: 'Single_Post_Blog',
           label: `Single_Post_Blog
-          <img src='https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80`,
+          <img src=https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80`,
           attributes: { clas: '' },
           category: "GRID",
           content: `<!-- component -->
@@ -398,7 +43,7 @@
         },{
             id: 'Form_grid',
           label: `Form_grid
-          <img src =https://tailwindcomponents.com/storage/868/conversions/temp38132-thumb.jpg'`,
+          <img src ='https://tailwindcomponents.com/storage/868/conversions/temp38132-thumb.jpg '>`,
           attributes: { clas: '' },
           category: "GRID",
           content: `<!-- component -->
@@ -461,7 +106,7 @@
         {
             id: 'cards',
           label: `cards
-          <img src =https://tailwindcomponents.com/storage/6940/conversions/temp89530-thumb.jpg'`,
+          <img src ='https://tailwindcomponents.com/storage/6940/conversions/temp89530-thumb.jpg'>`,
           attributes: { clas: '' },
           category: "GRID",
           content:`<!-- component -->
@@ -563,7 +208,7 @@
         {
             id: 'sidebar',
           label: `sidebar
-        <img src = https://tailwindcomponents.com/storage/7124/conversions/temp20066-thumb.jpg'`,
+        <img src ='https://tailwindcomponents.com/storage/7124/conversions/temp20066-thumb.jpg'>`,
           attributes: { clas: '' },
           category: "menu",
           content: ` <!-- component -->
@@ -673,7 +318,7 @@
         },{
             id: 'LANDING-page',
           label: `LANDING-PAGE
-          <img src='https://tailwindcomponents.com/storage/7311/conversions/temp58717-thumb.jpg'`,
+          <img src=https://tailwindcomponents.com/storage/7311/conversions/temp58717-thumb.jpg`,
           attributes: { clas: '' },
           category: "menu",
           content: `<!-- component -->
@@ -741,7 +386,7 @@
         },
         {
             id: 'pdfviewver',
-          label: `pdfviewver<img src='https://tailwindcomponents.com/storage/7758/conversions/temp38848-thumb.jpg'`,
+          label: `pdfviewver<img src=https://tailwindcomponents.com/storage/7758/conversions/temp38848-thumb.jpg`,
           attributes: { clas: '' },
           category: "MENU",
           content: `<!-- component -->
@@ -774,7 +419,7 @@
         }, {
             id: 'hambuger_animation',
           label: `hamburger_animation
-          <img src='https://tailwindcomponents.com/storage/7927/conversions/temp76743-thumb.jpg'`,
+          <img src=https://tailwindcomponents.com/storage/7927/conversions/temp76743-thumb.jpg`,
           attributes: { clas: '' },
           category: "MENU",
           content: `<!-- component -->
@@ -791,7 +436,7 @@
         {
             id: 'navigation-bar',
           label: `<navigation-bar
-          <img src='https://tailwindcomponents.com/storage/6344/conversions/temp40117-thumb.jpg'`,
+          <img src=https://tailwindcomponents.com/storage/6344/conversions/temp40117-thumb.jpg`,
           attributes: { clas: '' },
           category: "MENU",
           content: `<!-- component -->
@@ -940,7 +585,7 @@
         },
             {
             id: 'navbarselection',
-          label: `navbarselection<img src='https://tailwindcomponents.com/storage/4360/conversions/temp16590-thumb.jpg'`,
+          label: `navbarselection<img src=https://tailwindcomponents.com/storage/4360/conversions/temp16590-thumb.jpg`,
           attributes: { clas: '' },
           category: "MENU",
           content: `<!-- component -->
@@ -1025,7 +670,7 @@
             {
             id: 'simple-menu',
           label: `simplemenu
-          <img src='https://tailwindcomponents.com/storage/3681/conversions/temp68648-thumb.jpg'`,
+          <img src=https://tailwindcomponents.com/storage/3681/conversions/temp68648-thumb.jpg`,
           attributes: { clas: '' },
           category: "MENU",
           content: `<!-- component -->
@@ -1057,7 +702,7 @@
         }, {
             id: 'animatedtab',
           label: `animatedtab
-          <img src='https://tailwindcomponents.com/storage/8543/conversions/temp83335-thumb.jpg'`,
+          <img src=https://tailwindcomponents.com/storage/8543/conversions/temp83335-thumb.jpg`,
           attributes: { clas: '' },
           category: "TAB",
           content: `<!-- component -->
@@ -1104,7 +749,7 @@
         }, {
             id: 'fullwidth-tab',
           label: `fullwidth-tab
-          <img src='https://tailwindcomponents.com/storage/8414/conversions/temp20311-thumb.jpg'`,
+          <img src=https://tailwindcomponents.com/storage/8414/conversions/temp20311-thumb.jpg`,
           attributes: { clas: '' },
           category: "TAB",
           content: `<!-- component -->
@@ -1237,7 +882,7 @@
         },
             {
             id: 'vertical-timeline',
-          label: `<img src='https://tailwindcomponents.com/storage/2240/conversions/temp42270-thumb.jpg'`,
+          label: `<img src=https://tailwindcomponents.com/storage/2240/conversions/temp42270-thumb.jpg`,
           attributes: { clas: '' },
           category: "TAB",
           content: `<!-- component -->
@@ -1350,7 +995,7 @@
 
         },  {
             id: 'frame_mockup',
-          label: `frame-mockup<img src='https://tailwindcomponents.com/storage/1670/conversions/temp97208-thumb.jpg'`,
+          label: `frame-mockup<img src=https://tailwindcomponents.com/storage/1670/conversions/temp97208-thumb.jpg`,
           attributes: { clas: '' },
           category: "TAB",
           content: `<!-- component -->
@@ -1469,7 +1114,7 @@
 
         },  {
             id: 'color-selection',
-          label: `color-selection<img src='https://tailwindcomponents.com/storage/6077/conversions/temp66927-thumb.jpg'`,
+          label: `color-selection<img src=https://tailwindcomponents.com/storage/6077/conversions/temp66927-thumb.jpg`,
           attributes: { clas: '' },
           category: "TAB",
           content: `<!-- component -->
@@ -1519,7 +1164,7 @@
 
         }, {
             id: 'AVATAR-SIZES',
-          label: `<img src='https://tailwindcomponents.com/storage/8772/conversions/temp66386-thumb.jpg'`,
+          label: `<img src=https://tailwindcomponents.com/storage/8772/conversions/temp66386-thumb.jpg`,
           attributes: { clas: '' },
           category: "IMAGES",
           content: `<!-- component -->
@@ -1555,7 +1200,7 @@
 
         }, {
             id: 'CSSAVATAR',
-          label: `CSSAVATAR<img src='https://tailwindcomponents.com/storage/8773/conversions/temp15678-thumb.jpg'`,
+          label: `CSSAVATAR<img src=https://tailwindcomponents.com/storage/8773/conversions/temp15678-thumb.jpg`,
           attributes: { clas: '' },
           category: "IMAGES",
           content: `<!-- component -->
@@ -1583,7 +1228,7 @@
 
         }, {
             id: 'STRIPED_TABLE',
-          label: `STRIPED_TABLE<img src='https://tailwindcomponents.com/storage/8277/conversions/temp44481-thumb.jpg'`,
+          label: `STRIPED_TABLE<img src=https://tailwindcomponents.com/storage/8277/conversions/temp44481-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -1675,7 +1320,7 @@
 
         },{
             id: 'Cards-table',
-          label: `cards-table<img src='https://tailwindcomponents.com/storage/4867/conversions/temp96687-thumb.jpg'`,
+          label: `cards-table<img src=https://tailwindcomponents.com/storage/4867/conversions/temp96687-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -1907,7 +1552,7 @@
 
         },{
             id: 'Invoice-table',
-          label: `Invoice-table<img src='https://tailwindcomponents.com/storage/9053/conversions/temp21680-thumb.jpg'`,
+          label: `Invoice-table<img src=https://tailwindcomponents.com/storage/9053/conversions/temp21680-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -2202,7 +1847,7 @@
 
         },{
             id: 'filter_search',
-          label: `filter_search<img src='https://tailwindcomponents.com/storage/9054/conversions/temp85646-thumb.jpg'`,
+          label: `filter_search<img src=https://tailwindcomponents.com/storage/9054/conversions/temp85646-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -2559,7 +2204,7 @@
 
         },{
             id: 'multi-line-table',
-          label: `multi-line-table<img src='https://tailwindcomponents.com/storage/8416/conversions/temp41738-thumb.jpg'`,
+          label: `multi-line-table<img src=https://tailwindcomponents.com/storage/8416/conversions/temp41738-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -2991,7 +2636,7 @@
 
         },{
             id: 'HOVERBOARD-TABLE',
-          label: `HOVER-BOARD<img src='https://tailwindcomponents.com/storage/8278/conversions/temp82596-thumb.jpg'`,
+          label: `HOVER-BOARD<img src=https://tailwindcomponents.com/storage/8278/conversions/temp82596-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -3083,7 +2728,7 @@
 
         },{
             id: 'SIMPLE-TABLE',
-          label: `SIMPLE-TABLE<img src='https://tailwindcomponents.com/storage/6481/conversions/temp49705-thumb.jpg'`,
+          label: `SIMPLE-TABLE<img src=https://tailwindcomponents.com/storage/6481/conversions/temp49705-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -3134,7 +2779,7 @@
 
         },{
             id: 'COLORED-TABLE',
-          label: `COLORED=TABLE<img src='https://tailwindcomponents.com/storage/6961/conversions/temp57439-thumb.jpg'`,
+          label: `COLORED=TABLE<img src=https://tailwindcomponents.com/storage/6961/conversions/temp57439-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -3265,7 +2910,7 @@
 
         },{
             id: 'customers-table',
-          label: `customer-table<img src='https://tailwindcomponents.com/storage/5415/conversions/temp29285-thumb.jpg'`,
+          label: `customer-table<img src=https://tailwindcomponents.com/storage/5415/conversions/temp29285-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -3391,7 +3036,7 @@
 
         },{
             id: 'table-user-role',
-          label: `table-user-role<img src='https://tailwindcomponents.com/storage/5736/conversions/temp38330-thumb.jpg'`,
+          label: `table-user-role<img src=https://tailwindcomponents.com/storage/5736/conversions/temp38330-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -3448,7 +3093,7 @@
 
         },{
             id: 'RESPONSIBLE-TABLE',
-          label: `RESPONSIBLE-TABLE<img src='https://tailwindcomponents.com/storage/4998/conversions/temp30424-thumb.jpg'`,
+          label: `RESPONSIBLE-TABLE<img src=https://tailwindcomponents.com/storage/4998/conversions/temp30424-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -3512,7 +3157,7 @@
 
         },{
             id: 'USER-ROLE-TABLE',
-          label: `USER-ROLE-TABLE<img src='https://tailwindcomponents.com/storage/5739/conversions/temp20931-thumb.jpg'`,
+          label: `USER-ROLE-TABLE<img src=https://tailwindcomponents.com/storage/5739/conversions/temp20931-thumb.jpg`,
           attributes: { clas: '' },
           category: "TABLES",
           content: `<!-- component -->
@@ -3633,7 +3278,7 @@
 
         },{
             id: 'FORGET-PASSWORD',
-          label: `FORGET-PASSWORD<img src='https://tailwindcomponents.com/storage/7338/conversions/temp36508-thumb.jpg'`,
+          label: `FORGET-PASSWORD<img src=https://tailwindcomponents.com/storage/7338/conversions/temp36508-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -3683,7 +3328,7 @@
 
         },{
             id: 'profile-model',
-          label: `profile=model<img src='https://tailwindcomponents.com/storage/9128/conversions/temp60523-thumb.jpg'`,
+          label: `profile=model<img src=https://tailwindcomponents.com/storage/9128/conversions/temp60523-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -3719,7 +3364,7 @@
 
 },{
             id: 'simple-model',
-          label: `simple-model<img src='https://tailwindcomponents.com/storage/8001/conversions/temp64087-thumb.jpg'`,
+          label: `simple-model<img src=https://tailwindcomponents.com/storage/8001/conversions/temp64087-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -3733,7 +3378,7 @@
 
         },{
             id: 'aswome-login-page',
-          label: `aswome-login-page<img src='https://tailwindcomponents.com/storage/2830/conversions/temp22899-thumb.jpg'`,
+          label: `aswome-login-page<img src=https://tailwindcomponents.com/storage/2830/conversions/temp22899-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -3790,7 +3435,7 @@
 
         },{
             id: 'model',
-          label: `model<img src='https://tailwindcomponents.com/storage/3339/conversions/temp84709-thumb.jpg'`,
+          label: `model<img src=https://tailwindcomponents.com/storage/3339/conversions/temp84709-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -3901,7 +3546,7 @@
 
         },{
             id: 'notification-card',
-          label: `notification-card<img src='https://tailwindcomponents.com/storage/4139/conversions/temp20557-thumb.jpg'`,
+          label: `notification-card<img src=https://tailwindcomponents.com/storage/4139/conversions/temp20557-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -3947,7 +3592,7 @@
 
         },{
             id: 'emotion-diaolog-card',
-          label: `emotion-dialog-card<img src='https://tailwindcomponents.com/storage/1919/conversions/temp70372-thumb.jpg'`,
+          label: `emotion-dialog-card<img src=https://tailwindcomponents.com/storage/1919/conversions/temp70372-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -3974,7 +3619,7 @@
 
         },{
             id: 'rating-popup',
-          label: `<img src='https://tailwindcomponents.com/storage/1811/conversions/temp72142-thumb.jpg'`,
+          label: `<img src=https://tailwindcomponents.com/storage/1811/conversions/temp72142-thumb.jpg`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -4024,7 +3669,8 @@
         },
         {
             id: 'alert-components',
-          label: `alert-componets <img src='https://tailwindcomponents.com/storage/2533/conversions/temp71500-thumb.jpg'`,
+          label: `alert-componets
+          <img src='https://tailwindcomponents.com/storage/2533/conversions/temp71500-thumb.jpg'>`,
           attributes: { clas: '' },
           category: "MODELS",
           content: `<!-- component -->
@@ -4272,7 +3918,8 @@
 
         },{
             id: 'CART-ICON',
-          label: `CART-ICON<img src='https://tailwindcomponents.com/storage/8478/conversions/temp10512-thumb.jpg'>`,
+          label: `CART-ICON
+          <img src='https://tailwindcomponents.com/storage/8478/conversions/temp10512-thumb.jpg'>`,
           attributes: { clas: '' },
           category: "BADGESS",
           content: `<!-- component -->
@@ -4314,7 +3961,7 @@
 
         },{
             id: 'MAC-TERMINAL',
-          label: `<img src=`,
+          label: `macterminal<img src='https://tailwindcomponents.com/storage/736/conversions/temp46017-thumb.jpg'>`,
           attributes: { clas: '' },
           category: "WIDGET",
           content: `<!-- component -->
@@ -4339,151 +3986,163 @@
   </div> 
 </div>`
 
-        },
-      ],
-    },
-    canvas: {
-      styles: [
+        },{
+            id: 'newletter',
+          label: `newsletter
+          <img src='https://tailwindcomponents.com/storage/9318/conversions/temp10388-thumb.jpg'>`,
+          attributes: { clas: '' },
+          category: "WIDGET",
+          content: `<!-- component -->
+<div class="flex h-screen items-center justify-center bg-[#fbfbfb]">
+  <div class="grid w-80 grid-rows-4 gap-1">
+    <p class="font-semibold text-gray-700">💌 Get the best of Product Hunt, directly in your inbox.</p>
+    <input type="text" class="h-10 w-full rounded border p-2 text-sm" placeholder="Your email" />
+    <button class="rounded bg-[#FD5E57] text-gray-50 hover:bg-gradient-to-r hover:from-[#FD5E57] hover:to-[#FC477E]">Subscribe to the newsletter</button>
+    <a href="">
+      <p class="mt-4 flex items-center text-xs text-gray-500 hover:text-gray-700">
+        Read the latest issue
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="ml-1 h-3 w-3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+      </p>
+    </a>
+  </div>
+</div>`
 
-      ],
-      scripts: [
-        'https://cdn.tailwindcss.com'
-      ]
-    }
-  });
-  const id = "{{ page.id }}";
-  if (id) {
-    const html = `{{ page.html|safe }}`
-    const css = `{{ page.css|safe }}`
-    editor.setComponents(html)
-    editor.setStyle(css)
-  }
-  editor.Panels.addPanel({
-    id: "panel-top",
-    el: ".panel__top",
-  });
-  editor.Panels.addPanel({
-    id: "basic-actions",
-    el: ".panel__basic-actions",
-    buttons: [
-      {
-        id: "visibility",
-        active: true, // active by default
-        className: "btn-toggle-borders",
-        label: "<u>B</u>",
-        command: "sw-visibility", // Built-in command
-      },
-      {
-        id: "export",
-        className: "btn-open-export",
-        label: "Exp",
-        command: "export-template",
-        context: "export-template", // For grouping context of buttons from the same panel
-      },
-      {
-        id: "show-json",
-        className: "btn-show-json",
-        label: "JSON",
-        context: "show-json",
-        command(editor) {
-          editor.Modal.setTitle("Components JSON")
-            .setContent(
-              `<textarea style="width:100%; height: 250px;">
-                    ${JSON.stringify(editor.getComponents())}
-                </textarea>`
-            )
-            .open();
-        },
-      },
-    ],
-  });
-  editor.on("run:export-template:before", (opts) => {
-    console.log("Before the command run");
-    if (0 /* some condition */) {
-      opts.abort = 1;
-    }
-  });
-  editor.on("run:export-template", () => console.log("After the command run"));
-  editor.on("abort:export-template", () => console.log("Command aborted"));
-  editor.Commands.add("show-layers", {
-    getRowEl(editor) {
-      return editor.getContainer().closest(".editor-row");
-    },
-    getLayersEl(row) {
-      return row.querySelector(".layers-container");
-    },
+        },{
+            id: 'block-image',
+          label: `block-image<img src='https://tailwindcomponents.com/storage/9208/conversions/temp53682-thumb.jpg'>`,
+          attributes: { clas: '' },
+          category: "WIDGET",
+          content: `<!-- component -->
+<div class="flex h-screen w-full flex-col items-center justify-center gap-y-2">
+	<div class="w-[300px] rounded-xl border border-gray-200 bg-white py-4 px-2 shadow-md shadow-gray-100">
+		<div class="flex items-center justify-between px-2 text-base font-medium text-gray-700">
+			<div>Add Block</div>
+			<div>
+				<button class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-black">
+          <svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+			</div>
+		</div>
+		<div class="mt-4">
+			<div class="flex max-h-[400px] w-full flex-col overflow-y-scroll">
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-2xl font-medium text-gray-700 group-hover:text-green-900">A</span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Text</p>
+            <span class="text-xs font-light text-gray-400">just start writing with plain text</span>
+          </div>
+        </button>
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-2xl font-medium text-gray-700 group-hover:text-green-900">
+              <svg class="mx-auto h-6 w-6" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Checklist</p>
+            <span class="text-xs font-light text-gray-400">create a to-do or checklist</span>
+          </div>
+        </button>
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-lg font-medium text-gray-700 group-hover:text-green-900"> H1 </span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Heading 1</p>
+            <span class="text-xs font-light text-gray-400">Big section heading</span>
+          </div>
+        </button>
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-lg font-medium text-gray-700 group-hover:text-green-900"> H2 </span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Heading 2</p>
+            <span class="text-xs font-light text-gray-400">Medium section heading</span>
+          </div>
+        </button>
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-lg font-medium text-gray-700 group-hover:text-green-900"> H3 </span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Heading 3</p>
+            <span class="text-xs font-light text-gray-400">small section heading</span>
+          </div>
+        </button>
+				<h3 class="my-2 px-4 text-[15px] text-gray-400">More</h3>
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-xl font-medium text-gray-700 group-hover:text-green-900">
+              <svg class="mx-auto h-6 w-6" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Bullet list</p>
+            <span class="text-xs font-light text-gray-400">Create a simple bullet list</span>
+          </div>
+        </button>
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-xl font-medium text-gray-700 group-hover:text-green-900">
+              <svg class="mx-auto h-6 w-6" width="100%" height="100%" viewBox="0 0 24 24">
+                <g fill="currentColor" fill-rule="evenodd">
+                  <path d="M21 16a1 1 0 0 1 0 2H10a1 1 0 0 1 0-2h11zm0-10a1 1 0 0 1 0 2H10a1 1 0 1 1 0-2h11z"></path>
+                  <path d="M4.464 13.74c.256 0 .496.036.72.108.224.072.419.179.584.32.165.141.295.319.388.532.093.213.14.461.14.744 0 .181-.019.345-.056.492a1.666 1.666 0 0 1-.392.732c-.09.101-.19.2-.296.296l-1.72 1.48h2.512V19.5H2.392v-1.272l2.2-1.976c.112-.101.224-.216.336-.344a.66.66 0 0 0 .168-.448.544.544 0 0 0-.208-.452.765.765 0 0 0-.488-.164c-.224 0-.399.07-.524.208a.839.839 0 0 0-.212.512l-1.2-.088c.016-.293.077-.548.184-.764.107-.216.248-.396.424-.54.176-.144.383-.252.62-.324.237-.072.495-.108.772-.108zm.992-9.404V10H4.304V5.68l-1.136 1-.68-.784 1.848-1.56h1.12z"></path>
+                </g>
+              </svg>
+            </span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Ordered list</p>
+            <span class="text-xs font-light text-gray-400">Create a list with numbered</span>
+          </div>
+        </button>
+				<button class="group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 hover:bg-green-100">
+          <div class="flex h-12 w-12 items-center rounded-lg bg-gray-200 text-black group-hover:bg-green-200">
+            <span class="tag w-full text-center text-xl font-medium text-gray-700 group-hover:text-green-900">
+              <svg class="mx-auto h-6 w-6" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+          </div>
+          <div class="flex flex-col items-start justify-between font-light text-gray-600">
+            <p class="text-[15px]">Info box</p>
+            <span class="text-xs font-light text-gray-400">Add a box with additional info</span>
+          </div>
+        </button>
+			</div>
+		</div>
+	</div>
 
-    run(editor, sender) {
-      const lmEl = this.getLayersEl(this.getRowEl(editor));
-      lmEl.style.display = "";
-    },
-    stop(editor, sender) {
-      const lmEl = this.getLayersEl(this.getRowEl(editor));
-      lmEl.style.display = "none";
-    },
-  });
-  editor.Commands.add("show-styles", {
-    getRowEl(editor) {
-      return editor.getContainer().closest(".editor-row");
-    },
-    getStyleEl(row) {
-      return row.querySelector(".styles-container");
-    },
+	<a href="https://github.com/samansayar" target="_blank"
+		class="mx-auto flex w-[300px] items-center justify-start gap-x-3 rounded-lg border border-gray-700 bg-gray-700 px-4 py-2">
+		<button class="inline-flex items-center space-x-2 rounded-full bg-gray-700 font-semibold text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="w-6" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
+          <g fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385c.6.105.825-.255.825-.57c0-.285-.015-1.23-.015-2.235c-3.015.555-3.795-.735-4.035-1.41c-.135-.345-.72-1.41-1.23-1.695c-.42-.225-1.02-.78-.015-.795c.945-.015 1.62.87 1.845 1.23c1.08 1.815 2.805 1.305 3.495.99c.105-.78.42-1.305.765-1.605c-2.67-.3-5.46-1.335-5.46-5.925c0-1.305.465-2.385 1.23-3.225c-.12-.3-.54-1.53.12-3.18c0 0 1.005-.315 3.3 1.23c.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23c.66 1.65.24 2.88.12 3.18c.765.84 1.23 1.905 1.23 3.225c0 4.605-2.805 5.625-5.475 5.925c.435.375.81 1.095.81 2.22c0 1.605-.015 2.895-.015 3.3c0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" fill="currentColor" /></g>
+        </svg>
+      </button>
+		<p class="text-sm text-white">My Github 🙂</p>
+</a>
+</div>`
 
-    run(editor, sender) {
-      const smEl = this.getStyleEl(this.getRowEl(editor));
-      smEl.style.display = "";
-    },
-    stop(editor, sender) {
-      const smEl = this.getStyleEl(this.getRowEl(editor));
-      smEl.style.display = "none";
-    },
-  });
-  editor.Commands.add("show-traits", {
-    getTraitsEl(editor) {
-      const row = editor.getContainer().closest(".editor-row");
-      return row.querySelector(".traits-container");
-    },
-    run(editor, sender) {
-      this.getTraitsEl(editor).style.display = "";
-    },
-    stop(editor, sender) {
-      this.getTraitsEl(editor).style.display = "none";
-    },
-  });
-  editor.Commands.add("set-device-desktop", {
-    run: (editor) => editor.setDevice("Desktop"),
-  });
-  editor.Commands.add("set-device-mobile", {
-    run: (editor) => editor.setDevice("Mobile"),
-  });
-  function saveContent(e) {
-    e.preventDefault()
-    console.log(editor.getHtml(), editor.getCss());
-    const id = "{{ page.id }}"
-    const formData = new FormData()
-    formData.append('html', editor.getHtml());
-    formData.append('css', editor.getCss());
-    formData.append('Project_name', document.getElementById('Project_name').value);
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const url = id ? `/editPage/${id}` : 'page/create';
-    const request = new Request(
-      url,
-      {
-        method: 'POST',
-        headers: { 'X-CSRFToken': csrftoken },
-        mode: 'same-origin', // Do not send CSRF token to another domain.
-        body: formData
-      }
-    );
-    fetch(request).then((resp) => resp.json()).then((response) => {
-      console.log(response)
-      alert('please do prove your existing repo to store the template..')
-    }).catch((error) => {
-      console.log(error)
-      alert('Error')
-    })
-  }
+        },{
+            id: 'pricing-panel',
+          label: `pricing-panel<img src=''`,
+          attributes: { clas: '' },
+          category: "WIDGET",
+          content: ``
 
+        }
+    ]
 </script>
-{% endblock %}
